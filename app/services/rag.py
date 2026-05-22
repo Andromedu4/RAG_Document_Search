@@ -81,7 +81,8 @@ def _format_context(results: list[SearchResult]) -> str:
     for index, result in enumerate(results, start=1):
         lines.append(
             f"[S{index}] {result.title} / {result.source_label} "
-            f"(chunk_id={result.chunk_id}, distance={result.distance:.4f})\n"
+            f"(chunk_id={result.chunk_id}, distance={result.distance:.4f})"
+            f"{f' / url={result.source_url}' if result.source_url else ''}\n"
             f"{result.snippet}"
         )
     return "\n\n".join(lines)
@@ -101,6 +102,7 @@ def _citations_from_answer(answer: str, results: list[SearchResult]) -> list[dic
                     "document_id": result.document_id,
                     "title": result.title,
                     "source_label": result.source_label,
+                    "source_url": result.source_url,
                     "snippet": result.snippet[:240],
                 }
             )

@@ -8,6 +8,7 @@ The core user path is:
 
 ```text
 upload document
+  -> or fetch website URL
   -> extract text
   -> recursive chunking
   -> embeddings
@@ -36,6 +37,7 @@ PostgreSQL + pgvector
 Important modules:
 
 - `app/services/document_extraction.py` extracts PDF/DOCX/TXT/MD text.
+- `app/services/web_extraction.py` validates public URLs, fetches HTML/TXT pages, and extracts readable text.
 - `app/services/chunking.py` implements recursive chunking.
 - `app/services/indexing.py` stores chunks and embeddings.
 - `app/services/search.py` retrieves relevant chunks.
@@ -51,7 +53,7 @@ Providers:
 
 ## Data Model
 
-- `documents`: uploaded file metadata and extracted text.
+- `documents`: uploaded file or URL metadata, original source path/URL, and extracted text.
 - `post_chunks`: retrievable indexed chunks with vector embeddings.
 - `provider_call_logs`: provider operation, model, tokens, cost, status, latency.
 - `rag_runs`: question, answer, retrieved chunk ids, citations.

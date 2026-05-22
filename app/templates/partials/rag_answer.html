@@ -15,31 +15,26 @@
     {% endfor %}
   </div>
 
-  {% if result.citations %}
-    <h3>Цитаты</h3>
-    <div class="document-list">
-      {% for citation in result.citations %}
-        <div class="document-row">
-          <strong>[{{ citation.marker }}] {{ citation.title }}</strong>
-          <span class="muted">chunk {{ citation.chunk_id }}</span>
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-
-  <h3>Relevant documents</h3>
+  <div class="sources-head">
+    <h3>Использованные источники</h3>
+    <span class="muted">{{ displayed_sources|length }} фрагмент{% if displayed_sources|length != 1 %}а{% endif %}</span>
+  </div>
   <div class="document-list">
-    {% for item in result.relevant_documents %}
-      <div class="retrieved-doc">
+    {% for item in displayed_sources %}
+      <div class="retrieved-doc retrieved-doc-cited">
         <div class="result-head">
-          <strong>{{ item.source_label }}</strong>
-          <span class="badge">score {{ "%.3f"|format(item.score) }}</span>
+          {% if item.source_url %}
+            <strong><a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.source_label }}</a></strong>
+          {% else %}
+            <strong>{{ item.source_label }}</strong>
+          {% endif %}
+          <span class="badge">source {{ loop.index }}</span>
         </div>
-        <p>{{ item.snippet }}</p>
-        <p class="muted">chunk {{ item.chunk_index }} · distance {{ "%.3f"|format(item.distance) }}</p>
+        <blockquote class="source-snippet">{{ item.snippet }}</blockquote>
+        <p class="muted">chunk {{ item.chunk_index }} · score {{ "%.3f"|format(item.score) }}</p>
       </div>
     {% else %}
-      <p class="empty">Релевантные фрагменты не найдены.</p>
+      <p class="empty">Ответ получен без отдельных цитируемых фрагментов.</p>
     {% endfor %}
   </div>
 </article>

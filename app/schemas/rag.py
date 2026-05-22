@@ -15,6 +15,7 @@ class RelevantDocument(BaseModel):
     distance: float
     score: float
     chunk_index: int
+    source_url: str | None = None
 
 
 class RagAskResponse(BaseModel):

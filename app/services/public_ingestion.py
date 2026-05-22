@@ -11,6 +11,7 @@ from app.services.ai_logging import LoggedAIClient
 from app.services.document_extraction import extract_text_from_upload
 from app.services.indexing import index_document
 from app.services.text import stable_hash
+from app.services.web_extraction import fetch_web_page
 
 PUBLIC_USER_EMAIL = "anonymous@rag-document-search.local"
 
@@ -66,6 +67,37 @@ async def ingest_upload(
         filename=document.original_filename,
         content_type=content_type,
     )
+    index_document(db, document, settings, ai_client)
+    document.processing_status = "completed"
+    db.flush()
+    return document
+
+
+async def ingest_url(
+    *,
+    db: Session,
+    settings: Settings,
+    ai_client: LoggedAIClient,
+    url: str,
+    post: Post | None = None,
+) -> Document:
+    public_user = ensure_public_user(db)
+    web_page = await fetch_web_page(url, settings)
+    content_hash = stable_hash(f"{web_page.url}\n{web_page.text}")
+
+    document = Document(
+        post_id=post.id if post else None,
+        uploaded_by_id=public_user.id,
+        original_filename=web_page.title[:255],
+        content_type=web_page.content_type,
+        storage_path=web_page.url,
+        extracted_text=web_page.text,
+        content_hash=content_hash,
+        processing_status="processing",
+    )
+    db.add(document)
+    db.flush()
+
     index_document(db, document, settings, ai_client)
     document.processing_status = "completed"
     db.flush()

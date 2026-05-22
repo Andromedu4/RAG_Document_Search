@@ -1,0 +1,21 @@
+### Health
+GET http://localhost:8000/health
+
+### Upload TXT document
+POST http://localhost:8000/documents/upload
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="sample.txt"
+Content-Type: text/plain
+
+Refund requests must include the order id and reason for the refund.
+--boundary--
+
+### Ask RAG question
+POST http://localhost:8000/rag/ask
+Content-Type: application/json
+
+{
+  "question": "What must refund requests include?"
+}

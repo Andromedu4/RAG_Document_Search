@@ -1,0 +1,17 @@
+<div class="status-box source-added">
+  <strong>
+    {% if source_kind == "website" %}
+      Сайт добавлен в базу знаний.
+    {% else %}
+      Файл добавлен в базу знаний.
+    {% endif %}
+  </strong>
+  <p>
+    {% if document.storage_path and document.storage_path.startswith("http") %}
+      <a href="{{ document.storage_path }}" target="_blank" rel="noopener noreferrer">{{ document.original_filename }}</a>
+    {% else %}
+      {{ document.original_filename }}
+    {% endif %}
+  </p>
+  <p class="muted">{{ document.processing_status }} · {{ document.chunks|length }} chunks</p>
+</div>

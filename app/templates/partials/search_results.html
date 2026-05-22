@@ -2,10 +2,14 @@
   {% for item in results %}
     <article class="result">
       <div class="result-head">
-        <h2>{{ item.title }}</h2>
+        {% if item.source_url %}
+          <h2><a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a></h2>
+        {% else %}
+          <h2>{{ item.title }}</h2>
+        {% endif %}
         <span class="badge">score {{ "%.3f"|format(item.score) }}</span>
       </div>
-      <p>{{ item.snippet }}</p>
+      <blockquote class="source-snippet">{{ item.snippet }}</blockquote>
       <p class="muted">{{ item.source_label }} · chunk {{ item.chunk_index }} · distance {{ "%.3f"|format(item.distance) }}</p>
     </article>
   {% endfor %}

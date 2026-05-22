@@ -1,4 +1,5 @@
 from app.db.models import PostChunk, ProviderCallLog
+from app.services.web_extraction import WebPageContent
 
 from .conftest import auth_headers, make_docx_bytes, register_and_login
 
@@ -29,6 +30,16 @@ def test_post_create_indexes_chunks_and_semantic_search(client, db_session):
     payload = search.json()
     assert payload["results"]
     assert payload["results"][0]["title"] == "Semantic Retrieval Architecture"
+
+    html_search = client.get(
+        "/search/semantic",
+        params={"q": "semantic retrieval embeddings"},
+        headers={"HX-Request": "true", "Accept": "text/html"},
+    )
+
+    assert html_search.status_code == 200
+    assert "Semantic Retrieval Architecture" in html_search.text
+    assert "source-snippet" in html_search.text
 
 
 def test_public_upload_and_rag_question_without_login(client):
@@ -63,6 +74,65 @@ def test_public_upload_and_rag_question_without_login(client):
     ]
 
 
+def test_public_url_ingestion_becomes_rag_source(client, monkeypatch):
+    async def fake_fetch_web_page(url, settings):
+        return WebPageContent(
+            url=url,
+            title="Remote Refund Policy",
+            content_type="text/html",
+            text="Remote refund policy says refund requests need the customer email and invoice number.",
+        )
+
+    monkeypatch.setattr("app.services.public_ingestion.fetch_web_page", fake_fetch_web_page)
+
+    upload = client.post(
+        "/documents/url",
+        data={"url": "https://example.com/refund-policy"},
+    )
+
+    assert upload.status_code == 201
+    payload = upload.json()
+    assert payload["original_filename"] == "Remote Refund Policy"
+    assert payload["storage_path"] == "https://example.com/refund-policy"
+    assert payload["processing_status"] == "completed"
+
+    response = client.post(
+        "/rag/ask",
+        json={"question": "What does the remote refund policy require?"},
+    )
+
+    assert response.status_code == 200
+    answer = response.json()
+    assert answer["relevant_documents"]
+    assert answer["relevant_documents"][0]["source_url"] == "https://example.com/refund-policy"
+
+
+def test_async_url_ingestion_returns_partial_not_full_page(client, monkeypatch):
+    async def fake_fetch_web_page(url, settings):
+        return WebPageContent(
+            url=url,
+            title="DOU Gift Mall Vacancy",
+            content_type="text/html",
+            text="Gift Mall vacancy mentions Python, FastAPI, RAG, and document search responsibilities.",
+        )
+
+    monkeypatch.setattr("app.services.public_ingestion.fetch_web_page", fake_fetch_web_page)
+
+    response = client.post(
+        "/documents/url",
+        data={
+            "url": "https://jobs.dou.ua/companies/gift-mall/vacancies/355724/?from=widget_hot_category;"
+        },
+        headers={"HX-Request": "true", "Accept": "text/html"},
+    )
+
+    assert response.status_code == 201
+    assert "Сайт добавлен в базу знаний" in response.text
+    assert "DOU Gift Mall Vacancy" in response.text
+    assert "<!doctype html>" not in response.text.lower()
+    assert "<html" not in response.text.lower()
+
+
 def test_rag_answer_has_citation_and_logs_cost(client, db_session):
     token = register_and_login(client)
     client.post(
@@ -87,6 +157,18 @@ def test_rag_answer_has_citation_and_logs_cost(client, db_session):
     logs = db_session.query(ProviderCallLog).all()
     assert {log.operation for log in logs} >= {"embedding", "rag_answer"}
     assert all(log.estimated_cost_usd is not None for log in logs)
+
+    html_response = client.post(
+        "/rag/ask",
+        data={"question": "How should RAG answers cite sources?"},
+        headers={"HX-Request": "true", "Accept": "text/html"},
+    )
+
+    assert html_response.status_code == 200
+    assert "Использованные источники" in html_response.text
+    assert "source-snippet" in html_response.text
+    assert "Relevant documents" not in html_response.text
+    assert ">retrieved context<" not in html_response.text
 
 
 def test_docx_upload_extracts_text_and_becomes_searchable(client, db_session):

@@ -2,7 +2,7 @@
 
 Production-style pet project based on the ideas from `rag-from-scratch-main`.
 
-The app lets anyone upload a document, indexes it, retrieves relevant chunks for a question, and generates an answer with cited relevant documents.
+The app lets anyone upload a document or submit a website URL, indexes it, retrieves relevant chunks for a question, and generates an answer with cited relevant documents.
 
 ```text
 Indexing -> question -> retrieval -> generation -> answer
@@ -11,6 +11,7 @@ Indexing -> question -> retrieval -> generation -> answer
 The main goal is to demonstrate practical RAG engineering, not CRUD:
 
 - document upload for PDF, DOCX, TXT, Markdown
+- web URL ingestion for HTML and plain text pages
 - text extraction and recursive chunking
 - embeddings with configurable OpenAI embedding model
 - pgvector semantic retrieval
@@ -23,8 +24,8 @@ The main goal is to demonstrate practical RAG engineering, not CRUD:
 ## Product Flow
 
 1. Open the public workspace at `/`.
-2. Upload a file.
-3. The app extracts text, chunks it, embeds chunks, and stores vectors.
+2. Upload a file or submit a website URL.
+3. The app extracts readable text, chunks it, embeds chunks, and stores vectors.
 4. Ask a question.
 5. The retriever returns relevant document chunks.
 6. The generator answers using only retrieved context.
@@ -100,9 +101,17 @@ This starts FastAPI and PostgreSQL with pgvector.
 | --- | --- | --- |
 | `GET` | `/` | Public document search workspace |
 | `POST` | `/documents/upload` | Upload, extract, chunk, embed, index |
+| `POST` | `/documents/url` | Fetch a web page, extract readable text, chunk, embed, index |
 | `POST` | `/rag/ask` | Retrieve relevant chunks and generate answer |
 | `GET` | `/search/semantic?q=...` | Semantic search API |
 | `GET` | `/health` | Health check |
+
+Example URL ingestion:
+
+```bash
+curl -X POST http://127.0.0.1:8000/documents/url \
+  -F "url=https://example.com/article"
+```
 
 Example JSON ask:
 

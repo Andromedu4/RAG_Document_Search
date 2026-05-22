@@ -8,6 +8,7 @@ class DocumentRead(BaseModel):
     post_id: int | None
     original_filename: str
     content_type: str
+    storage_path: str | None
     extracted_text: str
     processing_status: str
     error_message: str | None

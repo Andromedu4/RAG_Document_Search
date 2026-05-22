@@ -4,9 +4,24 @@
 <section class="page-head">
   <h1>Semantic Search</h1>
 </section>
-<form class="search-form" hx-get="/search/semantic" hx-target="#search-results" hx-swap="innerHTML">
-  <input name="q" type="search" minlength="2" placeholder="Search policies, decisions, architecture notes..." required>
+<form
+  class="search-form"
+  method="get"
+  action="/search/semantic"
+  data-async-form="true"
+  data-method="GET"
+  data-action-url="/search/semantic"
+  data-target="#search-results"
+  data-submit-label="Search"
+  data-loading-label="Searching..."
+  data-loading-message="Searching indexed chunks in the knowledge base..."
+  data-error-title="Search failed."
+  data-error-message="Could not search the indexed knowledge base."
+>
+  <input name="q" type="search" minlength="2" placeholder="Search uploaded documents and indexed websites..." required>
   <button type="submit">Search</button>
 </form>
-<section id="search-results" class="results"></section>
+<section id="search-results" class="results">
+  <div class="status-box muted">Search results will appear here.</div>
+</section>
 {% endblock %}

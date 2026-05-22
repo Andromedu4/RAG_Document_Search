@@ -54,11 +54,18 @@ async def ask_question(
             "answer",
         ],
     )
+    cited_chunk_ids = [citation["chunk_id"] for citation in result.citations]
+    displayed_sources = [item for item in response.relevant_documents if item.chunk_id in cited_chunk_ids]
+    if not displayed_sources and response.relevant_documents:
+        displayed_sources = response.relevant_documents[:1]
     if request.headers.get("hx-request") == "true" or "text/html" in request.headers.get("accept", ""):
         return templates.TemplateResponse(
             request,
             "partials/rag_answer.html",
-            {"result": response, "retrieved": result.retrieved},
+            {
+                "result": response,
+                "displayed_sources": displayed_sources,
+            },
         )
     return response
 

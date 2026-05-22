@@ -15,18 +15,65 @@
     <div class="section-title">
       <span class="step">1</span>
       <div>
-        <h2>Загрузить документ</h2>
-        <p class="muted">PDF, DOCX, TXT или Markdown</p>
+        <h2>Добавить источник</h2>
+        <p class="muted">PDF, DOCX, TXT, Markdown или веб-страница</p>
       </div>
     </div>
 
-    <form method="post" action="/documents/upload" enctype="multipart/form-data" class="upload-form">
-      <label class="file-picker">
-        <span>Выбрать файл</span>
-        <input type="file" name="file" accept=".pdf,.docx,.txt,.md" required>
-      </label>
-      <button type="submit">Загрузить и проиндексировать</button>
-    </form>
+    <div class="source-forms">
+      <form
+        method="post"
+        action="/documents/upload"
+        enctype="multipart/form-data"
+        class="upload-form"
+        data-async-form="true"
+        data-action-url="/documents/upload"
+        data-target="#source-status"
+        data-submit-label="Загрузить и проиндексировать"
+        data-loading-label="Индексирую файл..."
+        data-loading-message="Загружаю файл, извлекаю текст и создаю embeddings..."
+        data-success-message="Файл добавлен в базу знаний. Обновляю список..."
+        data-error-title="Не удалось загрузить файл."
+        data-reload-on-success="true"
+      >
+        <label class="file-picker">
+          <span>Файл</span>
+          <input type="file" name="file" accept=".pdf,.docx,.txt,.md" required>
+        </label>
+        <button type="submit">Загрузить и проиндексировать</button>
+      </form>
+
+      <div class="divider"><span>или</span></div>
+
+      <form
+        method="post"
+        action="/documents/url"
+        class="url-form"
+        data-async-form="true"
+        data-action-url="/documents/url"
+        data-target="#source-status"
+        data-submit-label="Добавить сайт в базу знаний"
+        data-loading-label="Индексирую сайт..."
+        data-loading-message="Загружаю страницу, извлекаю readable text и создаю embeddings..."
+        data-success-message="Сайт добавлен в базу знаний. Обновляю список..."
+        data-error-title="Не удалось добавить сайт."
+        data-error-message="Сайт не дал загрузить страницу с сервера. Попробуй другой URL или загрузи текст файлом."
+        data-reload-on-success="true"
+      >
+        <label>
+          <span>Ссылка на сайт</span>
+          <input
+            type="url"
+            name="url"
+            placeholder="https://example.com/article"
+            required
+          >
+        </label>
+        <button type="submit">Добавить сайт в базу знаний</button>
+      </form>
+
+      <div id="source-status"></div>
+    </div>
 
     <div class="indexed-list">
       <h3>Загруженные файлы</h3>
@@ -34,7 +81,11 @@
         {% for doc in documents %}
           <div class="document-row">
             <div>
-              <strong>{{ doc.original_filename }}</strong>
+              {% if doc.storage_path and doc.storage_path.startswith("http") %}
+                <strong><a href="{{ doc.storage_path }}" target="_blank" rel="noopener noreferrer">{{ doc.original_filename }}</a></strong>
+              {% else %}
+                <strong>{{ doc.original_filename }}</strong>
+              {% endif %}
               <p class="muted">{{ doc.processing_status }} · {{ doc.chunks|length }} chunks</p>
             </div>
             <span class="badge">{{ doc.content_type.split("/")[-1] }}</span>

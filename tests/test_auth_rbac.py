@@ -9,8 +9,19 @@ def test_unauthenticated_root_renders_public_rag_workspace(client):
     assert response.status_code == 200
     assert "RAG for Document Search" in response.text
     assert "Загрузить и проиндексировать" in response.text
+    assert "Добавить сайт в базу знаний" in response.text
     assert 'data-async-form="true"' in response.text
+    assert 'data-action-url="/documents/url"' in response.text
     assert 'data-action-url="/rag/ask"' in response.text
+
+
+def test_semantic_search_page_uses_async_search_form(client):
+    response = client.get("/search")
+
+    assert response.status_code == 200
+    assert 'data-async-form="true"' in response.text
+    assert 'data-method="GET"' in response.text
+    assert 'data-action-url="/search/semantic"' in response.text
 
 
 def test_register_login_and_me(client):
