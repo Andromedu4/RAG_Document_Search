@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>{{ post.title }}</h1>
+    <p class="muted">{{ post.status }} · {{ post.chunks|length }} indexed chunks</p>
+  </div>
+</section>
+
+<article class="document">
+  {{ post.body | replace("\n", "<br>") | safe }}
+</article>
+
+<section class="panel">
+  <h2>Upload source document</h2>
+  <form method="post" action="/documents/upload" enctype="multipart/form-data" class="inline-form">
+    <input type="hidden" name="post_id" value="{{ post.id }}">
+    <input type="file" name="file" accept=".pdf,.docx,.txt,.md" required>
+    <button type="submit">Upload and index</button>
+  </form>
+  <div class="list compact">
+    {% for doc in post.documents %}
+      <div class="list-row">
+        <span>{{ doc.original_filename }}</span>
+        <span class="badge">{{ doc.processing_status }}</span>
+      </div>
+    {% else %}
+      <p class="empty">No uploads attached.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

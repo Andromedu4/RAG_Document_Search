@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Semantic Search{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Semantic Search</h1>
+</section>
+<form class="search-form" hx-get="/search/semantic" hx-target="#search-results" hx-swap="innerHTML">
+  <input name="q" type="search" minlength="2" placeholder="Search policies, decisions, architecture notes..." required>
+  <button type="submit">Search</button>
+</form>
+<section id="search-results" class="results"></section>
+{% endblock %}

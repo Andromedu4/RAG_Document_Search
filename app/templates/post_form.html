@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}New Post{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>New Post</h1>
+</section>
+<form method="post" action="/posts/new" class="editor">
+  <label>Title <input name="title" required></label>
+  <label>Status
+    <select name="status">
+      <option value="published">published</option>
+      <option value="draft">draft</option>
+    </select>
+  </label>
+  <label>Body <textarea name="body" rows="18" required></textarea></label>
+  <button type="submit">Publish and index</button>
+</form>
+{% endblock %}

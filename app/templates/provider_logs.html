@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Provider Logs{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Provider Call Logs</h1>
+</section>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Provider</th><th>Operation</th><th>Model</th><th>Tokens</th><th>Cost</th><th>Status</th><th>Latency</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+        <tr>
+          <td>{{ log.id }}</td>
+          <td>{{ log.provider }}</td>
+          <td>{{ log.operation }}</td>
+          <td>{{ log.model }}</td>
+          <td>{{ log.total_tokens }}</td>
+          <td>${{ log.estimated_cost_usd }}</td>
+          <td>{{ log.status }}</td>
+          <td>{{ log.latency_ms }}ms</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8">No provider calls logged yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}RAG for Document Search{% endblock %}
+{% block content %}
+<section class="workspace-head">
+  <div>
+    <p class="eyebrow">Document RAG workspace</p>
+    <h1>RAG for Document Search</h1>
+    <p class="muted">Загрузка -> индексация -> retrieval -> generation -> answer</p>
+  </div>
+  <span class="badge badge-live">Public upload</span>
+</section>
+
+<section class="workspace">
+  <div class="workspace-column upload-column">
+    <div class="section-title">
+      <span class="step">1</span>
+      <div>
+        <h2>Загрузить документ</h2>
+        <p class="muted">PDF, DOCX, TXT или Markdown</p>
+      </div>
+    </div>
+
+    <form method="post" action="/documents/upload" enctype="multipart/form-data" class="upload-form">
+      <label class="file-picker">
+        <span>Выбрать файл</span>
+        <input type="file" name="file" accept=".pdf,.docx,.txt,.md" required>
+      </label>
+      <button type="submit">Загрузить и проиндексировать</button>
+    </form>
+
+    <div class="indexed-list">
+      <h3>Загруженные файлы</h3>
+      <div class="document-list">
+        {% for doc in documents %}
+          <div class="document-row">
+            <div>
+              <strong>{{ doc.original_filename }}</strong>
+              <p class="muted">{{ doc.processing_status }} · {{ doc.chunks|length }} chunks</p>
+            </div>
+            <span class="badge">{{ doc.content_type.split("/")[-1] }}</span>
+          </div>
+        {% else %}
+          <p class="empty">Файлов пока нет.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="workspace-column answer-column">
+    <div class="section-title">
+      <span class="step">2</span>
+      <div>
+        <h2>Задать вопрос</h2>
+        <p class="muted">Ответ строится только по загруженным документам</p>
+      </div>
+    </div>
+
+    <form
+      class="ask-form"
+      method="post"
+      action="/rag/ask"
+      data-async-form="true"
+      data-action-url="/rag/ask"
+      data-target="#rag-answer"
+      data-submit-label="Получить ответ"
+    >
+      <textarea
+        name="question"
+        rows="7"
+        minlength="3"
+        placeholder="Например: какие документы нужны для refund request?"
+        required
+      ></textarea>
+      <button type="submit">Получить ответ</button>
+    </form>
+
+    <section id="rag-answer" class="results">
+      <div class="status-box muted">Ответ и relevant documents появятся здесь.</div>
+    </section>
+  </div>
+</section>
+{% endblock %}

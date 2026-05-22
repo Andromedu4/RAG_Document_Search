@@ -1,0 +1,15 @@
+.env
+.DS_Store
+.idea/
+.coverage
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+uploads/
+htmlcov/
+dist/
+build/
+*.egg-info/

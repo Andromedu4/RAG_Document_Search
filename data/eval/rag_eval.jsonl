@@ -1,0 +1,20 @@
+{"id":"q001","question":"How does the platform avoid re-embedding unchanged chunks?","answer_present":true,"expected_source_labels":["embedding","chunk"],"expected_chunk_refs":[]}
+{"id":"q002","question":"What should the assistant do when retrieved context does not contain the answer?","answer_present":true,"expected_source_labels":["rag","prompt"],"expected_chunk_refs":[]}
+{"id":"q003","question":"Where are provider model names and secrets configured?","answer_present":true,"expected_source_labels":["environment","config"],"expected_chunk_refs":[]}
+{"id":"q004","question":"How are OpenAI call costs tracked?","answer_present":true,"expected_source_labels":["provider","cost"],"expected_chunk_refs":[]}
+{"id":"q005","question":"Which roles can create and edit posts?","answer_present":true,"expected_source_labels":["auth","rbac"],"expected_chunk_refs":[]}
+{"id":"q006","question":"What document types can be uploaded?","answer_present":true,"expected_source_labels":["upload","document"],"expected_chunk_refs":[]}
+{"id":"q007","question":"What vector database extension is used for semantic search?","answer_present":true,"expected_source_labels":["pgvector","postgres"],"expected_chunk_refs":[]}
+{"id":"q008","question":"What endpoint performs semantic search?","answer_present":true,"expected_source_labels":["semantic search","api"],"expected_chunk_refs":[]}
+{"id":"q009","question":"What endpoint performs RAG Q&A?","answer_present":true,"expected_source_labels":["rag","api"],"expected_chunk_refs":[]}
+{"id":"q010","question":"How does the system keep OpenAI integration mockable in tests?","answer_present":true,"expected_source_labels":["provider","mock"],"expected_chunk_refs":[]}
+{"id":"q011","question":"Does the MVP require Kubernetes?","answer_present":false,"expected_source_labels":[],"expected_chunk_refs":[]}
+{"id":"q012","question":"What is the office Wi-Fi password?","answer_present":false,"expected_source_labels":[],"expected_chunk_refs":[]}
+{"id":"q013","question":"Which background job queue is mandatory for MVP?","answer_present":false,"expected_source_labels":[],"expected_chunk_refs":[]}
+{"id":"q014","question":"How are citations represented in RAG answers?","answer_present":true,"expected_source_labels":["citation","rag"],"expected_chunk_refs":[]}
+{"id":"q015","question":"What does the eval script measure?","answer_present":true,"expected_source_labels":["eval","grounding"],"expected_chunk_refs":[]}
+{"id":"q016","question":"How should Docker Compose start the database?","answer_present":true,"expected_source_labels":["docker","postgres"],"expected_chunk_refs":[]}
+{"id":"q017","question":"What Python version is used?","answer_present":true,"expected_source_labels":["python"],"expected_chunk_refs":[]}
+{"id":"q018","question":"What happens to failed document processing?","answer_present":true,"expected_source_labels":["processing","document"],"expected_chunk_refs":[]}
+{"id":"q019","question":"Which default embedding model is used?","answer_present":true,"expected_source_labels":["text-embedding-3-small"],"expected_chunk_refs":[]}
+{"id":"q020","question":"Who won the 2034 World Cup final?","answer_present":false,"expected_source_labels":[],"expected_chunk_refs":[]}

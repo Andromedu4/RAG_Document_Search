@@ -1,0 +1,45 @@
+<article class="result answer">
+  <div class="answer-head">
+    <div>
+      <p class="eyebrow">Answer</p>
+      <h2>Ответ</h2>
+    </div>
+    <span class="badge">RAG run #{{ result.rag_run_id }}</span>
+  </div>
+
+  <div class="answer-text">{{ result.answer }}</div>
+
+  <div class="pipeline" aria-label="RAG pipeline">
+    {% for step in result.pipeline %}
+      <span>{{ step }}</span>
+    {% endfor %}
+  </div>
+
+  {% if result.citations %}
+    <h3>Цитаты</h3>
+    <div class="document-list">
+      {% for citation in result.citations %}
+        <div class="document-row">
+          <strong>[{{ citation.marker }}] {{ citation.title }}</strong>
+          <span class="muted">chunk {{ citation.chunk_id }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <h3>Relevant documents</h3>
+  <div class="document-list">
+    {% for item in result.relevant_documents %}
+      <div class="retrieved-doc">
+        <div class="result-head">
+          <strong>{{ item.source_label }}</strong>
+          <span class="badge">score {{ "%.3f"|format(item.score) }}</span>
+        </div>
+        <p>{{ item.snippet }}</p>
+        <p class="muted">chunk {{ item.chunk_index }} · distance {{ "%.3f"|format(item.distance) }}</p>
+      </div>
+    {% else %}
+      <p class="empty">Релевантные фрагменты не найдены.</p>
+    {% endfor %}
+  </div>
+</article>
