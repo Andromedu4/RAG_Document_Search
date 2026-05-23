@@ -4,7 +4,11 @@
       <p class="eyebrow">Answer</p>
       <h2>Ответ</h2>
     </div>
-    <span class="badge">RAG run #{{ result.rag_run_id }}</span>
+    {% if result.rag_run_id %}
+      <span class="badge">RAG run #{{ result.rag_run_id }}</span>
+    {% else %}
+      <span class="badge">waiting for index</span>
+    {% endif %}
   </div>
 
   <div class="answer-text">{{ result.answer }}</div>

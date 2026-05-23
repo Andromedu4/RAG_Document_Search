@@ -1,7 +1,22 @@
+import time
+
 from app.db.models import PostChunk, ProviderCallLog
 from app.services.web_extraction import WebPageContent
 
 from .conftest import auth_headers, make_docx_bytes, register_and_login
+
+
+def wait_for_status_text(client, expected: str, timeout: float = 5.0) -> str:
+    deadline = time.monotonic() + timeout
+    last_text = ""
+    while time.monotonic() < deadline:
+        status = client.get("/documents/status", headers={"HX-Request": "true", "Accept": "text/html"})
+        assert status.status_code == 200
+        last_text = status.text
+        if expected in last_text:
+            return last_text
+        time.sleep(0.05)
+    return last_text
 
 
 def test_post_create_indexes_chunks_and_semantic_search(client, db_session):
@@ -55,7 +70,7 @@ def test_public_upload_and_rag_question_without_login(client):
     )
 
     assert upload.status_code == 201
-    assert upload.json()["processing_status"] == "completed"
+    assert upload.json()["processing_status"] == "queued"
 
     response = client.post(
         "/rag/ask",
@@ -146,9 +161,9 @@ def test_public_url_ingestion_becomes_rag_source(client, monkeypatch):
 
     assert upload.status_code == 201
     payload = upload.json()
-    assert payload["original_filename"] == "Remote Refund Policy"
+    assert payload["original_filename"] == "https://example.com/refund-policy"
     assert payload["storage_path"] == "https://example.com/refund-policy"
-    assert payload["processing_status"] == "completed"
+    assert payload["processing_status"] == "queued"
 
     response = client.post(
         "/rag/ask",
@@ -181,10 +196,12 @@ def test_async_url_ingestion_returns_partial_not_full_page(client, monkeypatch):
     )
 
     assert response.status_code == 201
-    assert "Сайт добавлен в базу знаний" in response.text
-    assert "DOU Gift Mall Vacancy" in response.text
+    assert "Сайт принят в обработку" in response.text
     assert "<!doctype html>" not in response.text.lower()
     assert "<html" not in response.text.lower()
+
+    status_text = wait_for_status_text(client, "DOU Gift Mall Vacancy")
+    assert "ready" in status_text
 
 
 def test_rag_answer_has_citation_and_logs_cost(client, db_session):
@@ -248,7 +265,7 @@ def test_docx_upload_extracts_text_and_becomes_searchable(client, db_session):
     )
 
     assert upload.status_code == 201
-    assert upload.json()["processing_status"] == "completed"
+    assert upload.json()["processing_status"] == "queued"
 
     search = client.get(
         "/search/semantic",

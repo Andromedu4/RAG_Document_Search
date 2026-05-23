@@ -34,10 +34,10 @@
         data-async-form="true"
         data-action-url="/documents/upload"
         data-target="#source-status"
-        data-submit-label="Загрузить и проиндексировать"
-        data-loading-label="Индексирую файл..."
-        data-loading-message="Загружаю файл, извлекаю текст и создаю embeddings..."
-        data-success-message="Файл добавлен в базу знаний. Обновляю список..."
+        data-submit-label="Загрузить файл"
+        data-loading-label="Загружаю файл..."
+        data-loading-message="Сохраняю файл и ставлю индексацию в очередь..."
+        data-success-message="Файл принят. Индексация продолжается в фоне..."
         data-error-title="Не удалось загрузить файл."
         data-reload-on-success="true"
       >
@@ -45,7 +45,7 @@
           <span>Файл</span>
           <input type="file" name="file" accept=".pdf,.docx,.txt,.md" required>
         </label>
-        <button type="submit">Загрузить и проиндексировать</button>
+        <button type="submit">Загрузить файл</button>
       </form>
 
       <div class="divider"><span>или</span></div>
@@ -58,9 +58,9 @@
         data-action-url="/documents/url"
         data-target="#source-status"
         data-submit-label="Добавить сайт в базу знаний"
-        data-loading-label="Индексирую сайт..."
-        data-loading-message="Загружаю страницу, извлекаю readable text и создаю embeddings..."
-        data-success-message="Сайт добавлен в базу знаний. Обновляю список..."
+        data-loading-label="Добавляю сайт..."
+        data-loading-message="Сохраняю URL и ставлю индексацию в очередь..."
+        data-success-message="Сайт принят. Индексация продолжается в фоне..."
         data-error-title="Не удалось добавить сайт."
         data-error-message="Сайт не дал загрузить страницу с сервера. Попробуй другой URL или загрузи текст файлом."
         data-reload-on-success="true"
@@ -82,22 +82,13 @@
 
     <div class="indexed-list">
       <h3>Загруженные файлы</h3>
-      <div class="document-list">
-        {% for doc in documents %}
-          <div class="document-row">
-            <div>
-              {% if doc.storage_path and doc.storage_path.startswith("http") %}
-                <strong><a href="{{ doc.storage_path }}" target="_blank" rel="noopener noreferrer">{{ doc.original_filename }}</a></strong>
-              {% else %}
-                <strong>{{ doc.original_filename }}</strong>
-              {% endif %}
-              <p class="muted">{{ doc.processing_status }} · {{ doc.chunks|length }} chunks</p>
-            </div>
-            <span class="badge">{{ doc.content_type.split("/")[-1] }}</span>
-          </div>
-        {% else %}
-          <p class="empty">Файлов пока нет.</p>
-        {% endfor %}
+      <div
+        id="document-list"
+        class="document-list"
+        data-poll-url="/documents/status"
+        data-poll-interval="2500"
+      >
+        {% include "partials/document_list.html" %}
       </div>
     </div>
   </div>

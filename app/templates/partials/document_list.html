@@ -1,0 +1,37 @@
+{% set active_statuses = ["queued", "fetching", "extracting", "indexing"] %}
+{% set status_labels = {
+  "queued": "queued",
+  "fetching": "fetching",
+  "extracting": "extracting",
+  "indexing": "indexing",
+  "completed": "ready",
+  "failed": "failed"
+} %}
+{% set ns = namespace(has_processing=false) %}
+{% for doc in documents %}
+  {% if doc.processing_status in active_statuses %}
+    {% set ns.has_processing = true %}
+  {% endif %}
+  <div class="document-row">
+    <div>
+      {% if doc.storage_path and doc.storage_path.startswith("http") %}
+        <strong><a href="{{ doc.storage_path }}" target="_blank" rel="noopener noreferrer">{{ doc.original_filename }}</a></strong>
+      {% else %}
+        <strong>{{ doc.original_filename }}</strong>
+      {% endif %}
+      <p class="muted">
+        {{ status_labels.get(doc.processing_status, doc.processing_status) }}
+        · {{ doc.chunks|length }} chunks
+      </p>
+      {% if doc.error_message %}
+        <p class="alert">{{ doc.error_message }}</p>
+      {% endif %}
+    </div>
+    <span class="badge status-badge status-{{ doc.processing_status }}">
+      {{ doc.content_type.split("/")[-1] }}
+    </span>
+  </div>
+{% else %}
+  <p class="empty">Файлов пока нет.</p>
+{% endfor %}
+<span hidden data-processing="{{ 'true' if ns.has_processing else 'false' }}"></span>

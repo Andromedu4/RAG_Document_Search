@@ -27,6 +27,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title=settings.app_name, debug=settings.debug, lifespan=lifespan)
+    app.state.db_session_factory = SessionLocal
     app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
     @app.middleware("http")

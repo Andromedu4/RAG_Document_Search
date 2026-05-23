@@ -10,6 +10,7 @@ The core user path is:
 ```text
 upload document
   -> or fetch website URL
+  -> queue background processing
   -> extract text
   -> recursive chunking
   -> embeddings
@@ -41,6 +42,7 @@ Important modules:
 
 - `app/services/document_extraction.py` extracts PDF/DOCX/TXT/MD text.
 - `app/services/web_extraction.py` validates public URLs, fetches HTML/TXT pages, and extracts readable text.
+- `app/services/public_ingestion.py` saves sources quickly, tracks processing status, and runs background indexing.
 - `app/services/chunking.py` implements recursive chunking.
 - `app/services/indexing.py` stores chunks and embeddings.
 - `app/services/search.py` retrieves relevant chunks.

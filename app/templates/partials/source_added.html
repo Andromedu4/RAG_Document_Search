@@ -1,9 +1,9 @@
 <div class="status-box source-added">
   <strong>
     {% if source_kind == "website" %}
-      Сайт добавлен в базу знаний.
+      Сайт принят в обработку.
     {% else %}
-      Файл добавлен в базу знаний.
+      Файл принят в обработку.
     {% endif %}
   </strong>
   <p>
@@ -13,5 +13,5 @@
       {{ document.original_filename }}
     {% endif %}
   </p>
-  <p class="muted">{{ document.processing_status }} · {{ document.chunks|length }} chunks</p>
+  <p class="muted">Индексация идет в фоне. Статус обновится автоматически.</p>
 </div>

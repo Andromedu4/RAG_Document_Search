@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_ai_client, get_current_workspace
 from app.core.config import Settings, get_settings
-from app.db.models import Document, Workspace
+from app.db.models import Document, PostChunk, Workspace
 from app.db.session import get_db
 from app.main_templates import templates
 from app.schemas.rag import RagAskResponse, RelevantDocument
@@ -13,6 +13,7 @@ from app.services.ai_logging import LoggedAIClient
 from app.services.rag import answer_question
 
 router = APIRouter(prefix="/rag", tags=["rag"])
+ACTIVE_DOCUMENT_STATUSES = {"queued", "fetching", "extracting", "indexing"}
 
 
 @router.post("/ask", response_model=RagAskResponse)
@@ -24,6 +25,38 @@ async def ask_question(
     workspace: Workspace = Depends(get_current_workspace),
 ):
     question = await _read_question(request)
+    pending_documents = db.scalar(
+        select(func.count())
+        .select_from(Document)
+        .where(
+            Document.workspace_id == workspace.id,
+            Document.processing_status.in_(ACTIVE_DOCUMENT_STATUSES),
+        )
+    )
+    ready_chunks = db.scalar(
+        select(func.count()).select_from(PostChunk).where(PostChunk.workspace_id == workspace.id)
+    )
+    if pending_documents and not ready_chunks:
+        response = RagAskResponse(
+            question=question,
+            answer="Документ еще индексируется. Подожди несколько секунд и задай вопрос снова.",
+            citations=[],
+            retrieved_chunk_ids=[],
+            rag_run_id=0,
+            relevant_documents=[],
+            pipeline=["indexing", "question"],
+        )
+        if request.headers.get("hx-request") == "true" or "text/html" in request.headers.get("accept", ""):
+            return templates.TemplateResponse(
+                request,
+                "partials/rag_answer.html",
+                {
+                    "result": response,
+                    "displayed_sources": [],
+                },
+            )
+        return response
+
     try:
         embedding = ai_client.embed_texts([question]).embeddings[0]
         result = answer_question(

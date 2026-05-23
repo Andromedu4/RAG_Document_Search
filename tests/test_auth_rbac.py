@@ -8,7 +8,7 @@ def test_unauthenticated_root_renders_public_rag_workspace(client):
 
     assert response.status_code == 200
     assert "RAG for Document Search" in response.text
-    assert "Загрузить и проиндексировать" in response.text
+    assert "Загрузить файл" in response.text
     assert "Добавить сайт в базу знаний" in response.text
     assert 'data-async-form="true"' in response.text
     assert 'data-action-url="/documents/url"' in response.text

@@ -26,7 +26,7 @@ The main goal is to demonstrate practical RAG engineering, not CRUD:
 
 1. Open your private demo workspace at `/`.
 2. Upload a file or submit a website URL.
-3. The app extracts readable text, chunks it, embeds chunks, and stores vectors.
+3. The app quickly accepts the source and indexes it in the background.
 4. Ask a question.
 5. The retriever returns relevant chunks only from your workspace.
 6. The generator answers using only retrieved context.
@@ -103,8 +103,9 @@ This starts FastAPI and PostgreSQL with pgvector.
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/` | Public document search workspace |
-| `POST` | `/documents/upload` | Upload, extract, chunk, embed, index |
-| `POST` | `/documents/url` | Fetch a web page, extract readable text, chunk, embed, index |
+| `POST` | `/documents/upload` | Save upload and queue background indexing |
+| `POST` | `/documents/url` | Save URL and queue background indexing |
+| `GET` | `/documents/status` | Render current workspace source/indexing status |
 | `POST` | `/workspace/clear` | Clear the current visitor workspace |
 | `POST` | `/rag/ask` | Retrieve relevant chunks and generate answer |
 | `GET` | `/search/semantic?q=...` | Semantic search API |

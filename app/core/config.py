@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     semantic_search_limit: int = 8
     rag_top_k: int = 6
     upload_dir: Path = Path("uploads")
+    max_upload_bytes: int = 15_000_000
     url_fetch_timeout_seconds: float = 10.0
     url_fetch_max_bytes: int = 1_500_000
 

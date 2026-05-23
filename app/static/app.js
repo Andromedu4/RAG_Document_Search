@@ -58,6 +58,49 @@ document.addEventListener("submit", async (event) => {
   }
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  startPollingBlocks();
+});
+
+function startPollingBlocks() {
+  document.querySelectorAll("[data-poll-url]").forEach((element) => {
+    if (!(element instanceof HTMLElement) || element.dataset.pollingStarted === "true") {
+      return;
+    }
+    element.dataset.pollingStarted = "true";
+    schedulePoll(element);
+  });
+}
+
+function schedulePoll(element) {
+  const interval = Number.parseInt(element.dataset.pollInterval || "2500", 10);
+  window.setTimeout(() => pollElement(element), Number.isNaN(interval) ? 2500 : interval);
+}
+
+async function pollElement(element) {
+  const state = element.querySelector("[data-processing]");
+  if (state instanceof HTMLElement && state.dataset.processing !== "true") {
+    return;
+  }
+
+  try {
+    const response = await fetch(element.dataset.pollUrl, {
+      headers: { "HX-Request": "true", "Accept": "text/html" },
+    });
+    if (response.ok) {
+      element.innerHTML = await response.text();
+    }
+  } catch {
+    schedulePoll(element);
+    return;
+  }
+
+  const nextState = element.querySelector("[data-processing]");
+  if (nextState instanceof HTMLElement && nextState.dataset.processing === "true") {
+    schedulePoll(element);
+  }
+}
+
 function submitAsyncForm(form) {
   const method = (form.dataset.method || form.method || "GET").toUpperCase();
   const action = form.dataset.actionUrl || form.action;
