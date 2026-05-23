@@ -3,9 +3,9 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.deps import get_ai_client
+from app.api.deps import get_ai_client, get_current_workspace
 from app.core.config import Settings, get_settings
-from app.db.models import Document
+from app.db.models import Document, Workspace
 from app.db.session import get_db
 from app.main_templates import templates
 from app.schemas.rag import RagAskResponse, RelevantDocument
@@ -21,6 +21,7 @@ async def ask_question(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
     ai_client: LoggedAIClient = Depends(get_ai_client),
+    workspace: Workspace = Depends(get_current_workspace),
 ):
     question = await _read_question(request)
     try:
@@ -31,6 +32,7 @@ async def ask_question(
             query_embedding=embedding,
             settings=settings,
             ai_client=ai_client,
+            workspace_id=workspace.id,
         )
         db.commit()
     except Exception as exc:
@@ -71,14 +73,23 @@ async def ask_question(
 
 
 @router.get("", response_class=HTMLResponse)
-def rag_page(request: Request, db: Session = Depends(get_db)):
+def rag_page(
+    request: Request,
+    db: Session = Depends(get_db),
+    workspace: Workspace = Depends(get_current_workspace),
+):
     documents = db.scalars(
         select(Document)
         .options(selectinload(Document.chunks))
+        .where(Document.workspace_id == workspace.id)
         .order_by(Document.created_at.desc())
         .limit(12)
     ).all()
-    return templates.TemplateResponse(request, "rag_document_search.html", {"documents": documents})
+    return templates.TemplateResponse(
+        request,
+        "rag_document_search.html",
+        {"documents": documents, "workspace": workspace},
+    )
 
 
 async def _read_question(request: Request) -> str:

@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class DocumentRead(BaseModel):
     id: int
+    workspace_id: int | None
     post_id: int | None
     original_filename: str
     content_type: str

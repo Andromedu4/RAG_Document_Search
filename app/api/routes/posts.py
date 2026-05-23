@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.deps import get_ai_client, get_current_user, require_roles
+from app.api.deps import get_ai_client, get_current_user, get_current_workspace, require_roles
 from app.core.config import Settings, get_settings
-from app.db.models import Post, Tag, User
+from app.db.models import Post, Tag, User, Workspace
 from app.db.session import get_db
 from app.schemas.posts import PostCreate, PostRead, PostUpdate
 from app.services.ai_logging import LoggedAIClient
@@ -38,6 +38,7 @@ def create_post(
     settings: Settings = Depends(get_settings),
     ai_client: LoggedAIClient = Depends(get_ai_client),
     current_user: User = Depends(require_roles("admin", "editor")),
+    workspace: Workspace = Depends(get_current_workspace),
 ) -> PostRead:
     post = Post(
         title=payload.title,
@@ -49,7 +50,7 @@ def create_post(
     post.tags = _load_tags(db, payload.tags)
     db.add(post)
     db.flush()
-    index_post(db, post, settings, ai_client)
+    index_post(db, post, settings, ai_client, workspace_id=workspace.id)
     db.commit()
     db.refresh(post)
     return _serialize_post(post)
@@ -75,6 +76,7 @@ def update_post(
     settings: Settings = Depends(get_settings),
     ai_client: LoggedAIClient = Depends(get_ai_client),
     _: User = Depends(require_roles("admin", "editor")),
+    workspace: Workspace = Depends(get_current_workspace),
 ) -> PostRead:
     post = db.scalar(select(Post).options(selectinload(Post.tags)).where(Post.id == post_id))
     if post is None:
@@ -88,7 +90,7 @@ def update_post(
         post.status = payload.status
     if payload.tags is not None:
         post.tags = _load_tags(db, payload.tags)
-    index_post(db, post, settings, ai_client)
+    index_post(db, post, settings, ai_client, workspace_id=workspace.id)
     db.commit()
     db.refresh(post)
     return _serialize_post(post)

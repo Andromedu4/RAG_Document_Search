@@ -28,10 +28,17 @@ def semantic_search(
     query_embedding: list[float],
     embedding_model: str,
     limit: int,
+    workspace_id: int,
 ) -> list[SearchResult]:
     if db.bind and db.bind.dialect.name == "postgresql":
-        return _postgres_search(db, query_embedding, embedding_model=embedding_model, limit=limit)
-    return _python_search(db, query_embedding, embedding_model=embedding_model, limit=limit)
+        return _postgres_search(
+            db,
+            query_embedding,
+            embedding_model=embedding_model,
+            limit=limit,
+            workspace_id=workspace_id,
+        )
+    return _python_search(db, query_embedding, embedding_model=embedding_model, limit=limit, workspace_id=workspace_id)
 
 
 def _postgres_search(
@@ -40,6 +47,7 @@ def _postgres_search(
     *,
     embedding_model: str,
     limit: int,
+    workspace_id: int,
 ) -> list[SearchResult]:
     vector_literal = "[" + ",".join(f"{value:.8f}" for value in query_embedding) + "]"
     rows = db.execute(
@@ -60,11 +68,17 @@ def _postgres_search(
             LEFT JOIN documents d ON d.id = pc.document_id
             WHERE pc.embedding IS NOT NULL
               AND pc.embedding_model = :embedding_model
+              AND pc.workspace_id = :workspace_id
             ORDER BY pc.embedding <=> CAST(:embedding AS vector)
             LIMIT :limit
             """
         ),
-        {"embedding": vector_literal, "embedding_model": embedding_model, "limit": limit},
+        {
+            "embedding": vector_literal,
+            "embedding_model": embedding_model,
+            "limit": limit,
+            "workspace_id": workspace_id,
+        },
     ).mappings()
     return [_row_to_result(row) for row in rows]
 
@@ -75,11 +89,16 @@ def _python_search(
     *,
     embedding_model: str,
     limit: int,
+    workspace_id: int,
 ) -> list[SearchResult]:
     chunks = (
         db.query(PostChunk)
         .options(joinedload(PostChunk.post), joinedload(PostChunk.document))
-        .filter(PostChunk.embedding.is_not(None), PostChunk.embedding_model == embedding_model)
+        .filter(
+            PostChunk.embedding.is_not(None),
+            PostChunk.embedding_model == embedding_model,
+            PostChunk.workspace_id == workspace_id,
+        )
         .all()
     )
     results: list[SearchResult] = []

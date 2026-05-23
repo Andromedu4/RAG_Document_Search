@@ -3,6 +3,7 @@
 ## Product
 
 `RAG for Document Search` is a public document-question-answering platform.
+For demo safety, each visitor gets a cookie-backed workspace. Uploads, URL sources, chunks, semantic search, and RAG answers are scoped to that workspace.
 
 The core user path is:
 
@@ -25,6 +26,8 @@ upload document
 ```text
 Browser UI
   |
+Workspace cookie
+  |
 FastAPI routes
   |
 RAG services
@@ -42,6 +45,7 @@ Important modules:
 - `app/services/indexing.py` stores chunks and embeddings.
 - `app/services/search.py` retrieves relevant chunks.
 - `app/services/rag.py` builds context and generates an answer.
+- `app/services/workspaces.py` creates, clears, and scopes visitor workspaces.
 - `app/services/ai_provider.py` keeps OpenAI/mock providers behind one interface.
 - `app/services/ai_logging.py` logs cost, tokens, latency, and errors.
 
@@ -53,10 +57,11 @@ Providers:
 
 ## Data Model
 
-- `documents`: uploaded file or URL metadata, original source path/URL, and extracted text.
-- `post_chunks`: retrievable indexed chunks with vector embeddings.
+- `workspaces`: anonymous visitor workspaces identified by a cookie-safe public id.
+- `documents`: uploaded file or URL metadata, original source path/URL, extracted text, and workspace id.
+- `post_chunks`: retrievable indexed chunks with vector embeddings and workspace id.
 - `provider_call_logs`: provider operation, model, tokens, cost, status, latency.
-- `rag_runs`: question, answer, retrieved chunk ids, citations.
+- `rag_runs`: question, answer, retrieved chunk ids, citations, and workspace id.
 - `prompt_templates` and `prompt_runs`: prompt versioning and prompt execution history.
 
 The older `users` and `posts` tables remain for compatibility, but the main RAG workflow is public and does not require login.

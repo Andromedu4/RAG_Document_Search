@@ -3,15 +3,16 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.deps import ALL_ROLES, get_ai_client, get_current_user, require_roles
+from app.api.deps import ALL_ROLES, get_ai_client, get_current_user, get_current_workspace, require_roles
 from app.core.config import Settings, get_settings
 from app.core.security import create_access_token, hash_password, verify_password
-from app.db.models import Document, Post, User
+from app.db.models import Document, Post, User, Workspace
 from app.db.session import get_db
 from app.main_templates import templates
 from app.services.ai_logging import LoggedAIClient
 from app.services.indexing import index_post
 from app.services.text import slugify
+from app.services.workspaces import clear_workspace_data, create_workspace, set_workspace_cookie
 
 router = APIRouter(tags=["ui"])
 
@@ -20,18 +21,33 @@ router = APIRouter(tags=["ui"])
 def rag_document_search_home(
     request: Request,
     db: Session = Depends(get_db),
+    workspace: Workspace = Depends(get_current_workspace),
 ):
     documents = db.scalars(
         select(Document)
         .options(selectinload(Document.chunks))
+        .where(Document.workspace_id == workspace.id)
         .order_by(Document.created_at.desc())
         .limit(12)
     ).all()
     return templates.TemplateResponse(
         request,
         "rag_document_search.html",
-        {"documents": documents},
+        {"documents": documents, "workspace": workspace},
     )
+
+
+@router.post("/workspace/clear")
+def clear_workspace(
+    db: Session = Depends(get_db),
+    workspace: Workspace = Depends(get_current_workspace),
+):
+    clear_workspace_data(db, workspace)
+    new_workspace = create_workspace(db)
+    db.commit()
+    redirect = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+    set_workspace_cookie(redirect, new_workspace.public_id)
+    return redirect
 
 
 @router.get("/register", response_class=HTMLResponse)
@@ -123,6 +139,7 @@ def create_post_form(
     settings: Settings = Depends(get_settings),
     ai_client: LoggedAIClient = Depends(get_ai_client),
     current_user: User = Depends(require_roles("admin", "editor")),
+    workspace: Workspace = Depends(get_current_workspace),
 ):
     post = Post(
         title=title,
@@ -133,7 +150,7 @@ def create_post_form(
     )
     db.add(post)
     db.flush()
-    index_post(db, post, settings, ai_client)
+    index_post(db, post, settings, ai_client, workspace_id=workspace.id)
     db.commit()
     return RedirectResponse(f"/posts/{post.id}/view", status_code=status.HTTP_303_SEE_OTHER)
 

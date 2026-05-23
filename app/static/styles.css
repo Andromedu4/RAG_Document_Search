@@ -86,6 +86,14 @@ a:hover {
   margin-bottom: 18px;
 }
 
+.workspace-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 h1,
 h2,
 h3,
@@ -283,6 +291,19 @@ button:hover,
   background: var(--accent-dark);
   color: #fff;
   text-decoration: none;
+}
+
+.secondary-button {
+  min-height: 34px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  padding: 8px 11px;
+}
+
+.secondary-button:hover {
+  background: var(--surface-soft);
+  color: var(--text);
 }
 
 button:disabled {
@@ -525,6 +546,10 @@ td {
   .workspace-head {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .workspace-actions {
+    justify-content: flex-start;
   }
 
   .shell {

@@ -12,6 +12,7 @@ from app.services.ai_logging import LoggedAIClient
 from app.services.ai_provider import build_ai_provider
 from app.services.prompts import ensure_default_prompts
 from app.services.rag import answer_question
+from app.services.workspaces import create_workspace
 
 
 @dataclass
@@ -49,6 +50,8 @@ def main() -> None:
 
     with SessionLocal() as db:
         ensure_default_prompts(db)
+        workspace = create_workspace(db)
+        db.commit()
         provider = build_ai_provider(settings)
         ai_client = LoggedAIClient(db=db, settings=settings, provider=provider)
 
@@ -61,6 +64,7 @@ def main() -> None:
                 query_embedding=embedding,
                 settings=settings,
                 ai_client=ai_client,
+                workspace_id=workspace.id,
             )
             db.commit()
 

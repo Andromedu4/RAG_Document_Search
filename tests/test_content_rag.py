@@ -74,6 +74,60 @@ def test_public_upload_and_rag_question_without_login(client):
     ]
 
 
+def test_workspace_cookie_isolates_public_rag_sources(client):
+    client.post(
+        "/documents/upload",
+        files={
+            "file": (
+                "private-refund-policy.txt",
+                b"Private workspace refund requests require approval from finance.",
+                "text/plain",
+            )
+        },
+    )
+
+    first_workspace_answer = client.post(
+        "/rag/ask",
+        json={"question": "Who approves private workspace refund requests?"},
+    )
+    assert first_workspace_answer.status_code == 200
+    assert first_workspace_answer.json()["relevant_documents"]
+
+    client.cookies.clear()
+    isolated_answer = client.post(
+        "/rag/ask",
+        json={"question": "Who approves private workspace refund requests?"},
+    )
+
+    assert isolated_answer.status_code == 200
+    assert isolated_answer.json()["relevant_documents"] == []
+    assert "don't know" in isolated_answer.json()["answer"].lower()
+
+
+def test_clear_workspace_removes_visible_sources(client):
+    client.post(
+        "/documents/upload",
+        files={
+            "file": (
+                "clear-me.txt",
+                b"Workspace clearing should remove this searchable source.",
+                "text/plain",
+            )
+        },
+    )
+
+    before_clear = client.get("/search/semantic", params={"q": "workspace clearing"})
+    assert before_clear.status_code == 200
+    assert before_clear.json()["results"]
+
+    clear_response = client.post("/workspace/clear", follow_redirects=False)
+    assert clear_response.status_code == 303
+
+    after_clear = client.get("/search/semantic", params={"q": "workspace clearing"})
+    assert after_clear.status_code == 200
+    assert after_clear.json()["results"] == []
+
+
 def test_public_url_ingestion_becomes_rag_source(client, monkeypatch):
     async def fake_fetch_web_page(url, settings):
         return WebPageContent(

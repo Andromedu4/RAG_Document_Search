@@ -2,7 +2,7 @@
 
 Production-style pet project based on the ideas from `rag-from-scratch-main`.
 
-The app lets anyone upload a document or submit a website URL, indexes it, retrieves relevant chunks for a question, and generates an answer with cited relevant documents.
+The app lets anyone upload a document or submit a website URL, indexes it inside the visitor's demo workspace, retrieves relevant chunks for a question, and generates an answer with cited source snippets.
 
 ```text
 Indexing -> question -> retrieval -> generation -> answer
@@ -12,6 +12,7 @@ The main goal is to demonstrate practical RAG engineering, not CRUD:
 
 - document upload for PDF, DOCX, TXT, Markdown
 - web URL ingestion for HTML and plain text pages
+- cookie-based workspace isolation for public demos
 - text extraction and recursive chunking
 - embeddings with configurable OpenAI embedding model
 - pgvector semantic retrieval
@@ -23,13 +24,15 @@ The main goal is to demonstrate practical RAG engineering, not CRUD:
 
 ## Product Flow
 
-1. Open the public workspace at `/`.
+1. Open your private demo workspace at `/`.
 2. Upload a file or submit a website URL.
 3. The app extracts readable text, chunks it, embeds chunks, and stores vectors.
 4. Ask a question.
-5. The retriever returns relevant document chunks.
+5. The retriever returns relevant chunks only from your workspace.
 6. The generator answers using only retrieved context.
-7. The UI shows the answer plus relevant documents.
+7. The UI shows the answer plus source snippets used in the answer.
+
+Each visitor gets a `rag_workspace_id` cookie. Documents, chunks, semantic search, and RAG answers are scoped to that workspace so public demo users do not see each other's uploads.
 
 ## RAG From Scratch Mapping
 
@@ -102,6 +105,7 @@ This starts FastAPI and PostgreSQL with pgvector.
 | `GET` | `/` | Public document search workspace |
 | `POST` | `/documents/upload` | Upload, extract, chunk, embed, index |
 | `POST` | `/documents/url` | Fetch a web page, extract readable text, chunk, embed, index |
+| `POST` | `/workspace/clear` | Clear the current visitor workspace |
 | `POST` | `/rag/ask` | Retrieve relevant chunks and generate answer |
 | `GET` | `/search/semantic?q=...` | Semantic search API |
 | `GET` | `/health` | Health check |

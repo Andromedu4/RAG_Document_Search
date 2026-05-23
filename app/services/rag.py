@@ -25,17 +25,25 @@ def answer_question(
     query_embedding: list[float],
     settings: Settings,
     ai_client: LoggedAIClient,
+    workspace_id: int,
 ) -> RagAnswer:
     retrieved = semantic_search(
         db,
         query_embedding=query_embedding,
         embedding_model=settings.openai_embedding_model,
         limit=settings.rag_top_k,
+        workspace_id=workspace_id,
     )
 
     if not retrieved:
         answer = "I don't know based on the provided context."
-        rag_run = RagRun(question=question, answer=answer, retrieved_chunk_ids=[], citations=[])
+        rag_run = RagRun(
+            workspace_id=workspace_id,
+            question=question,
+            answer=answer,
+            retrieved_chunk_ids=[],
+            citations=[],
+        )
         db.add(rag_run)
         db.flush()
         return RagAnswer(answer=answer, citations=[], retrieved=[], rag_run_id=rag_run.id)
@@ -59,6 +67,7 @@ def answer_question(
     )
     db.add(prompt_run)
     rag_run = RagRun(
+        workspace_id=workspace_id,
         question=question,
         answer=generation.text,
         retrieved_chunk_ids=[item.chunk_id for item in retrieved],

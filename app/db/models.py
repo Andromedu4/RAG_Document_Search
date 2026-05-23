@@ -70,6 +70,17 @@ class User(TimestampMixin, Base):
     documents: Mapped[list["Document"]] = relationship(back_populates="uploaded_by")
 
 
+class Workspace(TimestampMixin, Base):
+    __tablename__ = "workspaces"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    public_id: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+
+    documents: Mapped[list["Document"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+    chunks: Mapped[list["PostChunk"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+    rag_runs: Mapped[list["RagRun"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+
+
 class Post(TimestampMixin, Base):
     __tablename__ = "posts"
 
@@ -101,6 +112,7 @@ class Document(TimestampMixin, Base):
     __tablename__ = "documents"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int | None] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
     post_id: Mapped[int | None] = mapped_column(ForeignKey("posts.id", ondelete="SET NULL"))
     uploaded_by_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
@@ -114,6 +126,7 @@ class Document(TimestampMixin, Base):
     error_message: Mapped[str | None] = mapped_column(Text)
 
     post: Mapped[Post | None] = relationship(back_populates="documents")
+    workspace: Mapped[Workspace | None] = relationship(back_populates="documents")
     uploaded_by: Mapped[User] = relationship(back_populates="documents")
     chunks: Mapped[list["PostChunk"]] = relationship(back_populates="document", cascade="all, delete-orphan")
 
@@ -132,6 +145,7 @@ class PostChunk(TimestampMixin, Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int | None] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
     post_id: Mapped[int | None] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"))
     document_id: Mapped[int | None] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"))
     source_type: Mapped[str] = mapped_column(String(32), nullable=False)
@@ -144,6 +158,7 @@ class PostChunk(TimestampMixin, Base):
     embedding: Mapped[list[float] | None] = mapped_column(VectorType(1536))
 
     post: Mapped[Post | None] = relationship(back_populates="chunks")
+    workspace: Mapped[Workspace | None] = relationship(back_populates="chunks")
     document: Mapped[Document | None] = relationship(back_populates="chunks")
 
 
@@ -204,6 +219,7 @@ class RagRun(TimestampMixin, Base):
     __tablename__ = "rag_runs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int | None] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
     question: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     retrieved_chunk_ids: Mapped[list[int]] = mapped_column(JSON, default=list, nullable=False)
@@ -214,3 +230,5 @@ class RagRun(TimestampMixin, Base):
     provider_call_log_id: Mapped[int | None] = mapped_column(
         ForeignKey("provider_call_logs.id", ondelete="SET NULL")
     )
+
+    workspace: Mapped[Workspace | None] = relationship(back_populates="rag_runs")

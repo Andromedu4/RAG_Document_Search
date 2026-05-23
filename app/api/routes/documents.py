@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_ai_client
+from app.api.deps import get_ai_client, get_current_workspace
 from app.core.config import Settings, get_settings
-from app.db.models import Document, Post
+from app.db.models import Document, Post, Workspace
 from app.db.session import get_db
 from app.main_templates import templates
 from app.schemas.documents import DocumentRead
@@ -22,6 +22,7 @@ async def upload_document(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
     ai_client: LoggedAIClient = Depends(get_ai_client),
+    workspace: Workspace = Depends(get_current_workspace),
 ) -> Document:
     post = db.get(Post, post_id) if post_id else None
     if post_id and post is None:
@@ -33,6 +34,7 @@ async def upload_document(
             settings=settings,
             ai_client=ai_client,
             file=file,
+            workspace=workspace,
             post=post,
         )
         db.commit()
@@ -61,6 +63,7 @@ async def add_url_document(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
     ai_client: LoggedAIClient = Depends(get_ai_client),
+    workspace: Workspace = Depends(get_current_workspace),
 ) -> Document:
     post = db.get(Post, post_id) if post_id else None
     if post_id and post is None:
@@ -72,6 +75,7 @@ async def add_url_document(
             settings=settings,
             ai_client=ai_client,
             url=url,
+            workspace=workspace,
             post=post,
         )
         db.commit()

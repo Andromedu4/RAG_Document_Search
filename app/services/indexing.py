@@ -8,12 +8,20 @@ from app.services.chunking import chunk_text
 from app.services.text import estimate_tokens, stable_hash
 
 
-def index_post(db: Session, post: Post, settings: Settings, ai_client: LoggedAIClient) -> list[PostChunk]:
+def index_post(
+    db: Session,
+    post: Post,
+    settings: Settings,
+    ai_client: LoggedAIClient,
+    *,
+    workspace_id: int | None = None,
+) -> list[PostChunk]:
     post.content_hash = stable_hash(post.body)
     return _index_source(
         db,
         settings=settings,
         ai_client=ai_client,
+        workspace_id=workspace_id,
         source_type="post",
         source_label=post.title,
         text=post.body,
@@ -29,6 +37,7 @@ def index_document(
         db,
         settings=settings,
         ai_client=ai_client,
+        workspace_id=document.workspace_id,
         source_type="document",
         source_label=document.original_filename,
         text=document.extracted_text,
@@ -42,6 +51,7 @@ def _index_source(
     *,
     settings: Settings,
     ai_client: LoggedAIClient,
+    workspace_id: int | None,
     source_type: str,
     source_label: str,
     text: str,
@@ -66,6 +76,9 @@ def _index_source(
                 if document_id is None
                 else PostChunk.document_id == document_id,
                 PostChunk.embedding_model == settings.openai_embedding_model,
+                PostChunk.workspace_id.is_(workspace_id)
+                if workspace_id is None
+                else PostChunk.workspace_id == workspace_id,
             )
         )
     }
@@ -82,6 +95,7 @@ def _index_source(
         chunk = existing.get(text_chunk.content_hash)
         if chunk is None:
             chunk = PostChunk(
+                workspace_id=workspace_id,
                 post_id=post_id,
                 document_id=document_id,
                 source_type=source_type,

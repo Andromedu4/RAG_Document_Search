@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.security import hash_password
-from app.db.models import Document, Post, User
+from app.db.models import Document, Post, User, Workspace
 from app.services.ai_logging import LoggedAIClient
 from app.services.document_extraction import extract_text_from_upload
 from app.services.indexing import index_document
@@ -37,6 +37,7 @@ async def ingest_upload(
     settings: Settings,
     ai_client: LoggedAIClient,
     file: UploadFile,
+    workspace: Workspace,
     post: Post | None = None,
 ) -> Document:
     public_user = ensure_public_user(db)
@@ -50,6 +51,7 @@ async def ingest_upload(
     storage_path.write_bytes(content)
 
     document = Document(
+        workspace_id=workspace.id,
         post_id=post.id if post else None,
         uploaded_by_id=public_user.id,
         original_filename=file.filename or "upload",
@@ -79,6 +81,7 @@ async def ingest_url(
     settings: Settings,
     ai_client: LoggedAIClient,
     url: str,
+    workspace: Workspace,
     post: Post | None = None,
 ) -> Document:
     public_user = ensure_public_user(db)
@@ -86,6 +89,7 @@ async def ingest_url(
     content_hash = stable_hash(f"{web_page.url}\n{web_page.text}")
 
     document = Document(
+        workspace_id=workspace.id,
         post_id=post.id if post else None,
         uploaded_by_id=public_user.id,
         original_filename=web_page.title[:255],

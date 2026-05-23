@@ -14,6 +14,7 @@ Completed:
 - public website URL ingestion
 - PDF/DOCX/TXT/MD extraction
 - HTML/plain-text web page extraction
+- cookie-based workspace isolation for public demos
 - recursive chunking
 - OpenAI-compatible embeddings provider
 - mock provider for tests

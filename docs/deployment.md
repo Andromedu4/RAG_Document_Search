@@ -22,9 +22,11 @@ DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/ai_blog
 
 - Use managed PostgreSQL with pgvector enabled.
 - Run `alembic upgrade head` as a release step, not inside multiple app replicas.
+- Keep `DATABASE_URL` pointed at PostgreSQL; Render URLs are normalized to the installed `psycopg` driver automatically.
 - Use a strong `SECRET_KEY`.
 - Keep `OPENAI_API_KEY` in a secret manager.
 - Set `AI_PROVIDER=openai` only in trusted environments.
+- Public demo users are isolated by the `rag_workspace_id` cookie.
 - Configure OpenAI project budgets and usage alerts.
 - Persist `UPLOAD_DIR` or replace it with object storage.
 - Put the app behind TLS and a reverse proxy.
