@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from app.core.config import Settings
 from app.services.ai_provider import MockAIProvider
 from app.services.chunking import chunk_text
 from app.services.costs import estimate_cost_usd
@@ -33,3 +34,17 @@ def test_cost_estimation_for_rag_call():
     cost = estimate_cost_usd("gpt-5.4-nano", input_tokens=3000, output_tokens=500)
 
     assert cost == Decimal("0.00122500")
+
+
+def test_render_postgres_url_uses_psycopg_driver():
+    postgres_url = Settings(
+        database_url="postgresql://user:password@host:5432/dbname",
+        secret_key="test-secret-key",
+    ).database_url
+    legacy_url = Settings(
+        database_url="postgres://user:password@host:5432/dbname",
+        secret_key="test-secret-key",
+    ).database_url
+
+    assert postgres_url.startswith("postgresql+psycopg://")
+    assert legacy_url.startswith("postgresql+psycopg://")

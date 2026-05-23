@@ -40,6 +40,16 @@ class Settings(BaseSettings):
     def normalize_provider(cls, value: str) -> str:
         return value.lower().strip()
 
+    @field_validator("database_url")
+    @classmethod
+    def normalize_database_url(cls, value: str) -> str:
+        normalized = value.strip()
+        if normalized.startswith("postgres://"):
+            return normalized.replace("postgres://", "postgresql+psycopg://", 1)
+        if normalized.startswith("postgresql://"):
+            return normalized.replace("postgresql://", "postgresql+psycopg://", 1)
+        return normalized
+
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
